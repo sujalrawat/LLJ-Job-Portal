@@ -59,7 +59,16 @@ export function ApplyJobDrawer({ user, job, fetchJob, applied = false }) {
 
   const onSubmit = (data) => {
     const resumeFile = data.resume[0];
+
+    if (!resumeFile) {
+      console.error("No resume file selected.");
+      return;
+    }
+
     const fileBlob = new Blob([resumeFile], { type: resumeFile.type });
+
+    console.log("Selected File:", resumeFile);
+    console.log("Converted Blob:", fileBlob);
 
     fnApply({
       ...data,
@@ -67,11 +76,15 @@ export function ApplyJobDrawer({ user, job, fetchJob, applied = false }) {
       candidate_id: user.id,
       name: user.fullName,
       status: "applied",
-      resume: fileBlob, // Ensure it is properly formatted
-    }).then(() => {
-      fetchJob();
-      reset();
-    });
+      resume: fileBlob, // Send file as Blob
+    })
+      .then(() => {
+        fetchJob();
+        reset();
+      })
+      .catch((error) => {
+        console.error("Application submission failed:", error);
+      });
   };
 
   return (

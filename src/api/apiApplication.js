@@ -7,15 +7,26 @@ export async function applyToJob(token, _, jobData) {
   const random = Math.floor(Math.random() * 90000);
   const fileName = `resume-${random}-${jobData.candidate_id}`;
 
+  console.log("Uploading file:", fileName);
+  console.log("File details:", jobData.resume);
+
+  // Ensure the file is a Blob or File object
+  if (!(jobData.resume instanceof Blob || jobData.resume instanceof File)) {
+    throw new Error("Invalid file format. File must be a Blob or File object.");
+  }
+
   const { error: storageError } = await supabase.storage
     .from("resumes")
     .upload(fileName, jobData.resume, {
       cacheControl: "3600",
       upsert: false,
-      contentType: jobData.resume.type, // Ensure the content type is set
+      contentType: jobData.resume.type, // Ensure correct MIME type
     });
 
-  if (storageError) throw new Error("Error uploading Resume");
+  if (storageError) {
+    console.error("Supabase Storage Error:", storageError);
+    throw new Error("Error uploading Resume: " + storageError.message);
+  }
 
   const resume = `${supabaseUrl}/storage/v1/object/public/resumes/${fileName}`;
 
